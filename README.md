@@ -11,7 +11,7 @@ SPOTIPY_CLIENT_SECRET=...
 SPOTIPY_REDIRECT_URI=...' > .env
 ```
 
-### `Vulfverse` playlist
+## `Vulfverse` playlist
 
 Create a playlist with all the songs of the Vulfpeck universe:
 everything that has a Vulfpeck artist playing.
