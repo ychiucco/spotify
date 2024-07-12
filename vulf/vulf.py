@@ -5,6 +5,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 from datetime import date
 
+
 VULFVERSE = dict(
     vulfpeck = "spotify:artist:7pXu47GoqSYRajmBCjxdD6",
     vulfmon = "spotify:artist:6pGuw52TrX5SZPdQSxAvgW",
@@ -18,7 +19,7 @@ VULFVERSE = dict(
 )
 
 PLAYLIST_NAME = "Vulfverse"
-PLAYLIST_DESCRIPTION = "All the Vulfpeck universe"
+PLAYLIST_DESCRIPTION = "The whole Vulf pack."
 
 
 load_dotenv()
@@ -31,11 +32,12 @@ auth_manager = SpotifyOAuth(
 )
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
-all_tracks: list[tuple[date, str]] = []
+all_tracks: dict[str, date] = {}
 
 for artist_name, artist_id in VULFVERSE.items():
-    res = sp.artist_albums(artist_id, album_type="album")
+    res = sp.artist_albums(artist_id)
     albums = res["items"]
+
     while res["next"]:
         res = sp.next(res)
         albums.extend(res["items"])
@@ -44,9 +46,11 @@ for artist_name, artist_id in VULFVERSE.items():
         release_date = date.fromisoformat(album["release_date"])
         tracks = sp.album_tracks(album["id"])["items"]
         for track in tracks:
-            all_tracks.append((release_date, track["id"]))
+            if artist_id in [a["uri"] for a in track["artists"]]:
+                all_tracks[track["id"]] = release_date
 
-all_tracks.sort(key=lambda x: x[0])
+# Sort the dictionary items by date
+all_tracks = sorted(all_tracks.items(), key=lambda item: item[1])
 
 user_id = sp.current_user()["id"]
 playlist = sp.user_playlist_create(
@@ -56,13 +60,14 @@ playlist = sp.user_playlist_create(
     description=PLAYLIST_DESCRIPTION
 )
 
-# Add tracks to the playlist
-track_ids = [track[1] for track in all_tracks]
-
+track_ids = [track[0] for track in all_tracks]
 # Spotify API allows adding a maximum of 100 tracks at a time
 for i in range(0, len(track_ids), 100):
     sp.playlist_add_items(
         playlist_id=playlist["id"], items=track_ids[i:i + 100]
     )
 
-print(f"Playlist '{PLAYLIST_NAME}' created successfully!")
+print(
+    f"Playlist '{PLAYLIST_NAME}' created successfully "
+    f"with a total of {len(all_tracks)} songs!"
+)
