@@ -1,14 +1,21 @@
 import os
 from dataclasses import dataclass
 from dataclasses import field
-from devtools import debug
 from dotenv import load_dotenv
 from datetime import date
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 
+if load_dotenv("../.env") is False:
+    load_dotenv()
 
-# FIXME make this a yaml config file: `python playlist.py vulf.yml`
+auth_manager = SpotifyOAuth(
+    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
+    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
+    redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
+    scope='playlist-modify-public'
+)
+
 @dataclass
 class Playlist:
     name: str
@@ -16,8 +23,7 @@ class Playlist:
     _id: str | None = None
     artists: list[str] = field(default_factory=list)
 
-
-def get_artist_id_by_name(artist_name: str) -> str | None:
+def get_artist_id_by_name(sp: Spotify, artist_name: str) -> str | None:
     
     results = sp.search(q='artist:' + artist_name, type='artist', limit=1)
     artists = results['artists']['items']
@@ -26,7 +32,6 @@ def get_artist_id_by_name(artist_name: str) -> str | None:
         return artists[0]['id']
     else:
         return None
-
 
 def get_sorted_tracks(sp: Spotify, artist_ids: list[str]) -> list[str]:
     
@@ -58,7 +63,6 @@ def get_sorted_tracks(sp: Spotify, artist_ids: list[str]) -> list[str]:
     track_ids = [track[0] for track in all_tracks]
     return track_ids
 
-
 def remove_everything_from_playlist(
     sp: Spotify, user_id: str, playlist_id: str
 ) -> None:
@@ -77,13 +81,21 @@ def remove_everything_from_playlist(
             user_id, playlist_id, track_uris[i:i+100]
         )
 
+def make_or_update_playlist(playlist: Playlist):
 
-def make_or_update_playlist(sp: Spotify, playlist: Playlist):
+    print("Preparing the following playlist:")
+    print(f"- name:\t\t{playlist.name}")
+    print(f"- description:\t{playlist.description}")
+    for i, artist in enumerate(playlist.artists):
+        print(f"- artist[{i}]:\t{artist}")
+    print("\nPlease wait... 🥁\n")
+
+    sp=Spotify(auth_manager=auth_manager)
 
     user_id = sp.current_user()["id"]
 
     artist_ids = [
-        get_artist_id_by_name(artist_name=artist)
+        get_artist_id_by_name(sp=sp, artist_name=artist)
         for artist in playlist.artists
     ]
     track_ids = get_sorted_tracks(sp=sp, artist_ids=artist_ids)
@@ -106,56 +118,10 @@ def make_or_update_playlist(sp: Spotify, playlist: Playlist):
             playlist_id=playlist._id or new_playlist["id"],
             items=track_ids[i:i + 100]
         )
+    from devtools import debug
+    try:
+        debug(new_playlist)
+    except Exception as e:
+        debug(e)
 
-if __name__ == "__main__":
-    
-    load_dotenv()
-    auth_manager = SpotifyOAuth(
-        client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-        client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-        redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
-        scope='playlist-modify-public'
-    )
-
-    vulfverse = Playlist(
-        _id="42pqYvkCmcUikeKd8TJMi9",
-        name="Vulfverse",
-        description="The whole Vulf pack.",
-        artists=[
-            "vulfpeck",
-            "vulfpeck",
-            "vulfmon",
-            "theo katzman",
-            "woody goss",
-            "joey dosik",
-            "antwaun stanley",
-            "cory wong",
-            "the fearless flyers",
-            "woody and jeremy",
-            "groove spoon",
-            "my dear disco",
-            "ella riot",
-        ]
-    )
-
-    brit = Playlist(
-        name="2000brit",
-        description="Test playlist.",
-        artists=["arctic monkeys", "the strokes"]
-    )
-
-    beatles = Playlist(
-        name="The Beatles",
-        description="John + George + Paul + Ringo",
-        artists=[
-            "beatles",
-            "john lennon",
-            "george harrison",
-            "paul mccartney",
-            "ringo starr"
-        ]
-    )
-
-    sp = Spotify(auth_manager=auth_manager)
-
-    make_or_update_playlist(sp=sp, playlist=beatles)
+    print("Playlist ready 🎸🎧")

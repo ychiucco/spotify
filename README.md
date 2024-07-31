@@ -10,14 +10,3 @@ $ echo 'SPOTIPY_CLIENT_ID=...
 SPOTIPY_CLIENT_SECRET=...
 SPOTIPY_REDIRECT_URI=...' > .env
 ```
-
-## `Vulfverse` playlist
-
-Create a playlist with all the songs of the Vulfpeck universe.
-
-```sh
-$ python vulf/vulf.py
-
-Playlist 'Vulfverse' created successfully with a total of 862 songs!
-```
-
