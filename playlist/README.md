@@ -17,4 +17,4 @@ cp _blueprint.py my_playlist.py
 ```console
 python my_playlist.py
 ```
-- if you are creating a new playlist, its `_id` is returned at the end of the project: copy it and paste it in your file to keep updating the same playlist in the future (or get it directly from the Spotify page).
+- if you are creating a new playlist, its `_id` is returned at the end of the procedure: copy it and paste it in your file to keep updating the same playlist in the future (or get it directly from the Spotify page).
