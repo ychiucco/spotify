@@ -1,6 +1,3 @@
-from spotipy import Spotify
-
-from _playlist import auth_manager
 from _playlist import make_or_update_playlist
 from _playlist import Playlist
 
