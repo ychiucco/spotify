@@ -85,10 +85,12 @@ def make_or_update_playlist(playlist: Playlist):
 
     print("Preparing the following playlist:")
     print(f"- name:\t\t{playlist.name}")
+    if playlist._id is not None:
+        print(f"- id:\t\t{playlist._id}")
     print(f"- description:\t{playlist.description}")
     for i, artist in enumerate(playlist.artists):
-        print(f"- artist[{i}]:\t{artist}")
-    print("\nPlease wait... 🥁\n")
+        print(f"- artist[{i+1}]:\t{artist}")
+    print("\n🥁 Please wait...\n")
 
     sp=Spotify(auth_manager=auth_manager)
 
@@ -100,11 +102,7 @@ def make_or_update_playlist(playlist: Playlist):
     ]
     track_ids = get_sorted_tracks(sp=sp, artist_ids=artist_ids)
     
-    if playlist._id is not None:
-        remove_everything_from_playlist(
-            sp=sp, user_id=user_id, playlist_id=playlist._id
-        )
-    else:
+    if playlist._id is None:
         new_playlist = sp.user_playlist_create(
             user=user_id,
             name=playlist.name,
@@ -112,16 +110,19 @@ def make_or_update_playlist(playlist: Playlist):
             public=True,
             collaborative=False
         )
+    else:
+        remove_everything_from_playlist(
+            sp=sp, user_id=user_id, playlist_id=playlist._id
+        )
+        
 
     for i in range(0, len(track_ids), 100):
         sp.playlist_add_items(
             playlist_id=playlist._id or new_playlist["id"],
             items=track_ids[i:i + 100]
         )
-    from devtools import debug
-    try:
-        debug(new_playlist)
-    except Exception as e:
-        debug(e)
 
-    print("Playlist ready 🎸🎧")
+    print(f"🎸 Playlist ready!")
+    print(f"🎧 {len(track_ids)} total songs.")
+    if playlist._id is None:
+        print(f"ID of the new playlist: {new_playlist['id']}")
