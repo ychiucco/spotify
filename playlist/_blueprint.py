@@ -1,8 +1,8 @@
 from spotipy import Spotify
 
-from playlist import auth_manager
-from playlist import make_or_update_playlist
-from playlist import Playlist
+from _playlist import auth_manager
+from _playlist import make_or_update_playlist
+from _playlist import Playlist
 
 
 if __name__=="__main__":
